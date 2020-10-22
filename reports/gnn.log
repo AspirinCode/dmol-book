@@ -1,0 +1,131 @@
+Traceback (most recent call last):
+  File "/usr/share/miniconda/lib/python3.8/site-packages/jupyter_cache/executors/utils.py", line 51, in single_nb_execution
+    executenb(
+  File "/usr/share/miniconda/lib/python3.8/site-packages/nbclient/client.py", line 1087, in execute
+    return NotebookClient(nb=nb, resources=resources, km=km, **kwargs).execute()
+  File "/usr/share/miniconda/lib/python3.8/site-packages/nbclient/util.py", line 74, in wrapped
+    return just_run(coro(*args, **kwargs))
+  File "/usr/share/miniconda/lib/python3.8/site-packages/nbclient/util.py", line 53, in just_run
+    return loop.run_until_complete(coro)
+  File "/usr/share/miniconda/lib/python3.8/asyncio/base_events.py", line 616, in run_until_complete
+    return future.result()
+  File "/usr/share/miniconda/lib/python3.8/site-packages/nbclient/client.py", line 540, in async_execute
+    await self.async_execute_cell(
+  File "/usr/share/miniconda/lib/python3.8/site-packages/nbclient/client.py", line 832, in async_execute_cell
+    self._check_raise_for_error(cell, exec_reply)
+  File "/usr/share/miniconda/lib/python3.8/site-packages/nbclient/client.py", line 740, in _check_raise_for_error
+    raise CellExecutionError.from_cell_and_msg(cell, exec_reply['content'])
+nbclient.exceptions.CellExecutionError: An error occurred while executing the following cell:
+------------------
+from myst_nb import glue
+from moviepy.editor import VideoClip
+from moviepy.video.io.bindings import mplfig_to_npimage
+
+def draw_vector(x, y, s, v, ax, cmap, **kwargs):
+    x += s / 2
+    y += s /2 
+    for vi in v:        
+        if cmap is not None:
+            ax.add_patch(mpl.patches.Rectangle((x, y), s * 1.5, s, facecolor=cmap(vi),**kwargs))
+        else:
+            ax.add_patch(mpl.patches.Rectangle((x, y), s * 1.5, s, facecolor='#FFF', edgecolor='#333',**kwargs))
+        ax.text(x + s * 1.5 / 2, y + s/2, '{:.2f}'.format(vi), verticalalignment='center', horizontalalignment='center')
+        y += s        
+def draw_key(x, y, s, v, ax, cmap, **kwargs):    
+    x += s / 2    
+    y += s /2     
+    for vi in v:        
+        ax.add_patch(mpl.patches.Rectangle((x, y), s * 1.5, s, facecolor=cmap(1.),**kwargs))
+        ax.text(x + s * 1.5 / 2, y + s/2, vi, verticalalignment='center', horizontalalignment='center')
+        y += s
+    ax.text(x,y + s/2, 'Key:', verticalalignment='center', horizontalalignment='left')
+def draw(nodes, adj, ax, highlight=None, key=False, labels=None, mask=None, draw_nodes=None):    
+    G = nx.Graph()
+    for i in range(adj.shape[0]):
+        for j in range(adj.shape[0]):
+            if np.any(adj[i, j]):
+                G.add_edge(i, j)
+    if mask is None:
+        mask = [True] * len(G)
+    if draw_nodes is None:
+        draw_nodes = nodes
+    # go from atomic number to element
+    elements = np.argmax(draw_nodes, axis=-1)
+    el_labels = {i: list(my_elements.values())[e] for i,e in enumerate(elements)}
+    pos = nx.nx_agraph.graphviz_layout(G, prog='sfdp')
+    pos = nx.rescale_layout_dict(pos)
+    c = ['white'] * len(G)    
+    all_h = []
+    if highlight is not None:        
+        for i,h in enumerate(highlight):
+            for hj in h:
+                c[hj] = 'C{}'.format(i)                
+                all_h.append(hj)
+    nx.draw(G, ax=ax, pos=pos, labels=el_labels, node_size=700, node_color=c)
+    cmap = plt.get_cmap('Wistia')    
+    for i in range(len(G)):
+        if not mask[i]:
+            continue
+        if i in all_h:
+            draw_vector(*pos[i], 0.15, nodes[i], ax, cmap)
+        else:
+            draw_vector(*pos[i], 0.15, nodes[i], ax, None)
+    if key:
+        draw_key(-1, -1, 0.15, my_elements.values(), ax, cmap)
+    if labels is not None:
+        legend_elements = []
+        for i,l in enumerate(labels):
+            p = mpl.lines.Line2D([0], [0], marker='o', color='C{}'.format(i), label=l,
+                          markersize=15)
+            legend_elements.append(p)        
+        ax.legend(handles=legend_elements)
+    ax.set_xlim(-1.2, 1.2)
+    ax.set_ylim(-1.2, 1.2)
+    
+plt.figure()
+draw(nodes, adj, plt.gca(), highlight=[[1], [5, 0]], labels=['center', 'neighbors'])
+glue('dframe', plt.gcf(), display=False)
+------------------
+
+[0;31m---------------------------------------------------------------------------[0m
+[0;31mModuleNotFoundError[0m                       Traceback (most recent call last)
+[0;32m/usr/share/miniconda/lib/python3.8/site-packages/networkx/drawing/nx_agraph.py[0m in [0;36mpygraphviz_layout[0;34m(G, prog, root, args)[0m
+[1;32m    278[0m     [0;32mtry[0m[0;34m:[0m[0;34m[0m[0;34m[0m[0m
+[0;32m--> 279[0;31m         [0;32mimport[0m [0mpygraphviz[0m[0;34m[0m[0;34m[0m[0m
+[0m[1;32m    280[0m     [0;32mexcept[0m [0mImportError[0m [0;32mas[0m [0me[0m[0;34m:[0m[0;34m[0m[0;34m[0m[0m
+
+[0;31mModuleNotFoundError[0m: No module named 'pygraphviz'
+
+The above exception was the direct cause of the following exception:
+
+[0;31mImportError[0m                               Traceback (most recent call last)
+[0;32m<ipython-input-4-de33bef44647>[0m in [0;36m<module>[0;34m[0m
+[1;32m     65[0m [0;34m[0m[0m
+[1;32m     66[0m [0mplt[0m[0;34m.[0m[0mfigure[0m[0;34m([0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[0;32m---> 67[0;31m [0mdraw[0m[0;34m([0m[0mnodes[0m[0;34m,[0m [0madj[0m[0;34m,[0m [0mplt[0m[0;34m.[0m[0mgca[0m[0;34m([0m[0;34m)[0m[0;34m,[0m [0mhighlight[0m[0;34m=[0m[0;34m[[0m[0;34m[[0m[0;36m1[0m[0;34m][0m[0;34m,[0m [0;34m[[0m[0;36m5[0m[0;34m,[0m [0;36m0[0m[0;34m][0m[0;34m][0m[0;34m,[0m [0mlabels[0m[0;34m=[0m[0;34m[[0m[0;34m'center'[0m[0;34m,[0m [0;34m'neighbors'[0m[0;34m][0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[0m[1;32m     68[0m [0mglue[0m[0;34m([0m[0;34m'dframe'[0m[0;34m,[0m [0mplt[0m[0;34m.[0m[0mgcf[0m[0;34m([0m[0;34m)[0m[0;34m,[0m [0mdisplay[0m[0;34m=[0m[0;32mFalse[0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+
+[0;32m<ipython-input-4-de33bef44647>[0m in [0;36mdraw[0;34m(nodes, adj, ax, highlight, key, labels, mask, draw_nodes)[0m
+[1;32m     34[0m     [0melements[0m [0;34m=[0m [0mnp[0m[0;34m.[0m[0margmax[0m[0;34m([0m[0mdraw_nodes[0m[0;34m,[0m [0maxis[0m[0;34m=[0m[0;34m-[0m[0;36m1[0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[1;32m     35[0m     [0mel_labels[0m [0;34m=[0m [0;34m{[0m[0mi[0m[0;34m:[0m [0mlist[0m[0;34m([0m[0mmy_elements[0m[0;34m.[0m[0mvalues[0m[0;34m([0m[0;34m)[0m[0;34m)[0m[0;34m[[0m[0me[0m[0;34m][0m [0;32mfor[0m [0mi[0m[0;34m,[0m[0me[0m [0;32min[0m [0menumerate[0m[0;34m([0m[0melements[0m[0;34m)[0m[0;34m}[0m[0;34m[0m[0;34m[0m[0m
+[0;32m---> 36[0;31m     [0mpos[0m [0;34m=[0m [0mnx[0m[0;34m.[0m[0mnx_agraph[0m[0;34m.[0m[0mgraphviz_layout[0m[0;34m([0m[0mG[0m[0;34m,[0m [0mprog[0m[0;34m=[0m[0;34m'sfdp'[0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[0m[1;32m     37[0m     [0mpos[0m [0;34m=[0m [0mnx[0m[0;34m.[0m[0mrescale_layout_dict[0m[0;34m([0m[0mpos[0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[1;32m     38[0m     [0mc[0m [0;34m=[0m [0;34m[[0m[0;34m'white'[0m[0;34m][0m [0;34m*[0m [0mlen[0m[0;34m([0m[0mG[0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+
+[0;32m/usr/share/miniconda/lib/python3.8/site-packages/networkx/drawing/nx_agraph.py[0m in [0;36mgraphviz_layout[0;34m(G, prog, root, args)[0m
+[1;32m    235[0m     [0mThis[0m [0;32mis[0m [0ma[0m [0mwrapper[0m [0;32mfor[0m [0mpygraphviz_layout[0m[0;34m.[0m[0;34m[0m[0;34m[0m[0m
+[1;32m    236[0m     """
+[0;32m--> 237[0;31m     [0;32mreturn[0m [0mpygraphviz_layout[0m[0;34m([0m[0mG[0m[0;34m,[0m [0mprog[0m[0;34m=[0m[0mprog[0m[0;34m,[0m [0mroot[0m[0;34m=[0m[0mroot[0m[0;34m,[0m [0margs[0m[0;34m=[0m[0margs[0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[0m[1;32m    238[0m [0;34m[0m[0m
+[1;32m    239[0m [0;34m[0m[0m
+
+[0;32m/usr/share/miniconda/lib/python3.8/site-packages/networkx/drawing/nx_agraph.py[0m in [0;36mpygraphviz_layout[0;34m(G, prog, root, args)[0m
+[1;32m    279[0m         [0;32mimport[0m [0mpygraphviz[0m[0;34m[0m[0;34m[0m[0m
+[1;32m    280[0m     [0;32mexcept[0m [0mImportError[0m [0;32mas[0m [0me[0m[0;34m:[0m[0;34m[0m[0;34m[0m[0m
+[0;32m--> 281[0;31m         [0;32mraise[0m [0mImportError[0m[0;34m([0m[0;34m"requires pygraphviz "[0m [0;34m"http://pygraphviz.github.io/"[0m[0;34m)[0m [0;32mfrom[0m [0me[0m[0;34m[0m[0;34m[0m[0m
+[0m[1;32m    282[0m     [0;32mif[0m [0mroot[0m [0;32mis[0m [0;32mnot[0m [0;32mNone[0m[0;34m:[0m[0;34m[0m[0;34m[0m[0m
+[1;32m    283[0m         [0margs[0m [0;34m+=[0m [0;34mf"-Groot={root}"[0m[0;34m[0m[0;34m[0m[0m
+
+[0;31mImportError[0m: requires pygraphviz http://pygraphviz.github.io/
+ImportError: requires pygraphviz http://pygraphviz.github.io/
+
